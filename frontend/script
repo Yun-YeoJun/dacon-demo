@@ -10,3 +10,7 @@ npm install
 nohup npx vite --host 0.0.0.0 > app.log 2>&1 &
 
 
+docker build -t dacon-frontend .
+
+# 실행 (백그라운드, 자동 재시작)
+docker run -d --restart unless-stopped -p 5173:5173 --name dacon-frontend dacon-frontend
