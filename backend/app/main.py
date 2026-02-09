@@ -2,7 +2,9 @@ from fastapi import FastAPI, HTTPException, Query, Header, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from typing import Optional
-import httpx, uuid, base64, json
+import httpx, uuid, base64, json, logging
+
+logger = logging.getLogger(__name__)
 
 from .settings import settings
 from .models import (
@@ -50,7 +52,7 @@ async def analyze(req: AnalyzeRequest, x_client_id: Optional[str] = Header(defau
         try:
             async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
                 r = await client.post(
-                    settings.model_url,
+                    settings.model_url + "/predict",
                     json={"request_id": request_id, "text": req.text},
                     headers={"Content-Type": "application/json"},
                 )
@@ -73,7 +75,7 @@ async def analyze(req: AnalyzeRequest, x_client_id: Optional[str] = Header(defau
             pass
 
     # 2) fallback
-    printf("/v1/analyze 에서 fallback 발생")
+    logger.warning("/v1/analyze 에서 fallback 발생")
     res = analyze_text(req.text)
     return AnalyzeResponse(request_id=request_id, success=True, result=res)
 
