@@ -14,7 +14,7 @@ docker run -d \
   --restart unless-stopped \
   -p 8000:8000 \
   -v $(pwd)/data:/app/data \
-  -e MODEL_URL="http://모델서버주소" \
+  -e MODEL_URL="https://34lgfbpo1egrt7-8000.proxy.runpod.net" \
   smishing-backend
 
 sudo docker build -t smishing-backend .
@@ -25,4 +25,12 @@ sudo docker run -d \
   --restart unless-stopped \
   -p 8000:8000 \
   -v $(pwd)/data:/app/data \
+  smishing-backend
+
+docker run -d \
+  --name smishing-api \
+  --restart unless-stopped \
+  -p 8000:8000 \
+  -v $(pwd)/data:/app/data \
+  -e MODEL_URL="http://모델서버주소" \
   smishing-backend

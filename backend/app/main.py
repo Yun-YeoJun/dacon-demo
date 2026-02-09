@@ -73,6 +73,7 @@ async def analyze(req: AnalyzeRequest, x_client_id: Optional[str] = Header(defau
             pass
 
     # 2) fallback
+    printf("/v1/analyze 에서 fallback 발생")
     res = analyze_text(req.text)
     return AnalyzeResponse(request_id=request_id, success=True, result=res)
 
