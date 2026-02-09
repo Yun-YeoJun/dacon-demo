@@ -29,7 +29,8 @@ export function DMSelect({ onNavigate }: DMSelectProps) {
       {/* 플랫폼 선택 - 세로 배치 (3행 1열) */}
       <div className="px-4">
         <div className="space-y-4">
-          <button 
+          <button
+            onClick={() => onNavigate('kakao')}
             className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-3xl flex items-center gap-6 p-6 text-white shadow-lg hover:scale-105 transition-transform"
           >
             <img src={kakaoIcon} alt="카카오톡" className="w-16 h-16 rounded-2xl object-cover" />

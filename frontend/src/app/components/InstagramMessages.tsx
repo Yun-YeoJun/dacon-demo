@@ -1,16 +1,32 @@
+import { useState, useEffect } from 'react';
+import { listInbox, type InboxItem } from '../lib/api';
+
 interface InstagramMessagesProps {
   onAnalyze: (messageId: string) => void;
-  onNavigate: (page: 'home' | 'messages' | 'analysis' | 'safeanalysis' | 'forgery' | 'mypage' | 
+  onNavigate: (page: 'home' | 'messages' | 'analysis' | 'safeanalysis' | 'forgery' | 'mypage' |
     'dmselect' | 'facebook' | 'instagram' | 'search' | 'notification') => void;
 }
 
+const COLORS = ['bg-gray-800', 'bg-gray-700', 'bg-gray-600', 'bg-black'];
+
 export function InstagramMessages({ onNavigate, onAnalyze }: InstagramMessagesProps) {
-  const messages = [
-    { id: 1, sender: 'chrisjames9', preview: '👍', time: '12:30 AM', avatar: '👤', color: 'bg-black' },
-    { id: 2, sender: 'sansamaro', preview: 'ㅋㅋㅋ', time: '12:30 AM', avatar: '👤', color: 'bg-gray-800' },
-    { id: 3, sender: 'soyyoung41', preview: '네에', time: '12:30 AM', avatar: '👤', color: 'bg-gray-700' },
-    { id: 4, sender: 'gogosing23', preview: '내일 봐 😊', time: '12:30 AM', avatar: '👤', color: 'bg-gray-600' },
-  ];
+  const [messages, setMessages] = useState<InboxItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await listInbox('instagram');
+        setMessages(res.items);
+      } catch (e: any) {
+        setError(e?.message || '메시지를 불러오지 못했습니다');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   return (
     <div className="h-full overflow-y-auto pb-24 bg-white">
@@ -28,21 +44,26 @@ export function InstagramMessages({ onNavigate, onAnalyze }: InstagramMessagesPr
 
       {/* 메시지 목록 */}
       <div className="px-4">
-        {messages.map((message) => (
+        {loading && <div className="text-center py-8 text-gray-500">불러오는 중...</div>}
+        {error && <div className="text-center py-8 text-red-500">{error}</div>}
+        {!loading && !error && messages.length === 0 && (
+          <div className="text-center py-8 text-gray-400">메시지가 없습니다</div>
+        )}
+        {messages.map((message, index) => (
           <button
             key={message.id}
-            onClick={() => onAnalyze(String(message.id))}
+            onClick={() => onAnalyze(message.id)}
             className="w-full flex items-center gap-4 py-4 border-b border-gray-100 hover:bg-gray-50"
           >
-            <div className={`w-14 h-14 ${message.color} rounded-full flex items-center justify-center flex-shrink-0`}>
-              <span className="text-2xl">{message.avatar}</span>
+            <div className={`w-14 h-14 ${COLORS[index % COLORS.length]} rounded-full flex items-center justify-center flex-shrink-0`}>
+              <span className="text-2xl">👤</span>
             </div>
             <div className="flex-1 text-left min-w-0">
-              <div className="text-base font-bold mb-1">{message.sender}</div>
+              <div className="text-base font-bold mb-1">{message.senderName}</div>
               <div className="text-sm text-gray-500 truncate">{message.preview}</div>
             </div>
             <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <div className="text-xs text-gray-400">{message.time}</div>
+              <div className="text-xs text-gray-400">{new Date(message.ts).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</div>
               <div className="text-lg">📷</div>
             </div>
           </button>

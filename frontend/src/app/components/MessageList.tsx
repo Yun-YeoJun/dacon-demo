@@ -1,16 +1,32 @@
+import { useState, useEffect } from 'react';
+import { listInbox, type InboxItem } from '../lib/api';
+
 interface MessageListProps {
   onAnalyze: (messageId: string) => void;
-  onNavigate: (page: 'home' | 'messages' | 'analysis' | 'safeanalysis' | 'forgery' | 'mypage' | 
+  onNavigate: (page: 'home' | 'messages' | 'analysis' | 'safeanalysis' | 'forgery' | 'mypage' |
     'dmselect' | 'facebook' | 'instagram' | 'search' | 'notification') => void;
 }
 
+const COLORS = ['bg-blue-100', 'bg-pink-100', 'bg-green-100', 'bg-orange-100', 'bg-purple-100'];
+
 export function MessageList({ onNavigate, onAnalyze }: MessageListProps) {
-  const messages = [
-    { id: 1, sender: '국세청', phone: '010-1234-5678', preview: '세금 환급 안내', date: '2025. 07. 15', emoji: '📝', initial: '국', color: 'bg-blue-100', isPhishing: true },
-    { id: 2, sender: '삼성페이', phone: '010-5678-1234', preview: '결제 승인', date: '2025. 07. 15', emoji: '💳', initial: '삼', color: 'bg-pink-100', isPhishing: false },
-    { id: 3, sender: '택배', phone: '010-9999-8888', preview: '배송 완료', date: '2025. 07. 27', emoji: '📦', initial: '택', color: 'bg-green-100', isPhishing: false },
-    { id: 4, sender: '경찰청', phone: '010-7777-6666', preview: '사기 주의 안내', date: '2025. 07. 07', emoji: '🚨', initial: '경', color: 'bg-orange-100', isPhishing: true },
-  ];
+  const [messages, setMessages] = useState<InboxItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await listInbox('sms');
+        setMessages(res.items);
+      } catch (e: any) {
+        setError(e?.message || '메시지를 불러오지 못했습니다');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   return (
     <div className="h-full overflow-y-auto pb-24 bg-white">
@@ -28,23 +44,27 @@ export function MessageList({ onNavigate, onAnalyze }: MessageListProps) {
 
       {/* 메시지 목록 */}
       <div className="px-4">
-        {messages.map((message) => (
+        {loading && <div className="text-center py-8 text-gray-500">불러오는 중...</div>}
+        {error && <div className="text-center py-8 text-red-500">{error}</div>}
+        {!loading && !error && messages.length === 0 && (
+          <div className="text-center py-8 text-gray-400">메시지가 없습니다</div>
+        )}
+        {messages.map((message, index) => (
           <button
             key={message.id}
-            onClick={() => onNavigate(message.isPhishing ? 'analysis' : 'safeanalysis')}
+            onClick={() => onAnalyze(message.id)}
             className="w-full flex items-center gap-4 py-4 border-b border-gray-100 hover:bg-gray-50"
           >
-            <div className={`w-14 h-14 ${message.color} rounded-2xl flex items-center justify-center flex-shrink-0`}>
-              <span className="text-2xl font-bold">{message.initial}</span>
+            <div className={`w-14 h-14 ${COLORS[index % COLORS.length]} rounded-2xl flex items-center justify-center flex-shrink-0`}>
+              <span className="text-2xl font-bold">{message.senderName.charAt(0)}</span>
             </div>
             <div className="flex-1 text-left min-w-0">
-              <div className="text-base font-bold mb-1">{message.sender}</div>
-              <div className="text-xs text-gray-400 mb-1">{message.phone}</div>
+              <div className="text-base font-bold mb-1">{message.senderName}</div>
+              <div className="text-xs text-gray-400 mb-1">{message.senderId}</div>
               <div className="text-sm text-gray-500 truncate">{message.preview}</div>
             </div>
             <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <div className="text-xs text-gray-400">{message.date}</div>
-              <div className="text-lg">{message.emoji}</div>
+              <div className="text-xs text-gray-400">{new Date(message.ts).toLocaleDateString('ko-KR')}</div>
             </div>
           </button>
         ))}

@@ -36,6 +36,7 @@ class InboxResponse(BaseModel):
 class MessageDetail(BaseModel):
     id: str
     channel: Channel
+    senderName: str
     senderId: str
     content: str
     ts: str

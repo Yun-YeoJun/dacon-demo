@@ -1,11 +1,15 @@
-import { ChevronRight, User, FileText, Bell, LogOut, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronRight } from 'lucide-react';
+import { listAnalyses } from '../lib/api';
 
 interface MyPageProps {
-  onNavigate: (page: 'home' | 'messages' | 'analysis' | 'safeanalysis' | 'forgery' | 'mypage' | 
+  onNavigate: (page: 'home' | 'messages' | 'analysis' | 'safeanalysis' | 'forgery' | 'mypage' |
     'dmselect' | 'facebook' | 'instagram' | 'search' | 'notification' | 'history' | 'historydetail') => void;
 }
 
 export function MyPage({ onNavigate }: MyPageProps) {
+  const [stats, setStats] = useState({ total: 0, danger: 0, safe: 0 });
+
   const menuItems = [
     { id: 1, icon: '👤', label: '내 정보 설정', color: 'bg-blue-100' },
     { id: 2, icon: '📊', label: '분석 내역', color: 'bg-green-100' },
@@ -13,6 +17,19 @@ export function MyPage({ onNavigate }: MyPageProps) {
     { id: 4, icon: '💬', label: '고객센터', color: 'bg-orange-100' },
     { id: 5, icon: '📋', label: '이용약관', color: 'bg-pink-100' },
   ];
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await listAnalyses(null, 100);
+        const total = res.items.length;
+        const danger = res.items.filter(item => item.analysis.label === '스미싱').length;
+        setStats({ total, danger, safe: total - danger });
+      } catch {
+        // 실패 시 기본값 유지
+      }
+    })();
+  }, []);
 
   return (
     <div className="h-full overflow-y-auto pb-24 bg-white">
@@ -42,15 +59,15 @@ export function MyPage({ onNavigate }: MyPageProps) {
       {/* 통계 카드 */}
       <div className="mx-4 mb-6 grid grid-cols-3 gap-3">
         <div className="bg-blue-50 rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600 mb-1">24</div>
+          <div className="text-2xl font-bold text-blue-600 mb-1">{stats.total}</div>
           <div className="text-xs text-gray-600">분석 횟수</div>
         </div>
         <div className="bg-red-50 rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-red-600 mb-1">8</div>
+          <div className="text-2xl font-bold text-red-600 mb-1">{stats.danger}</div>
           <div className="text-xs text-gray-600">위험 탐지</div>
         </div>
         <div className="bg-green-50 rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-green-600 mb-1">16</div>
+          <div className="text-2xl font-bold text-green-600 mb-1">{stats.safe}</div>
           <div className="text-xs text-gray-600">안전 확인</div>
         </div>
       </div>
@@ -72,7 +89,7 @@ export function MyPage({ onNavigate }: MyPageProps) {
             <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
           </button>
         ))}
-        
+
         {/* 로그아웃 버튼 */}
         <button className="w-full mt-4 py-4 bg-gray-100 rounded-2xl text-base font-bold text-gray-700 hover:bg-gray-200">
           🚪 로그아웃

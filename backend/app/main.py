@@ -103,7 +103,7 @@ async def message_detail(id: str):
     m = get_message(conn, id)
     if not m:
         raise HTTPException(status_code=404, detail="message not found")
-    return MessageDetail(id=m["id"], channel=m["channel"], senderId=m["sender_id"], content=m["content"], ts=m["ts"])
+    return MessageDetail(id=m["id"], channel=m["channel"], senderName=m["sender_name"], senderId=m["sender_id"], content=m["content"], ts=m["ts"])
 
 @app.post("/v1/analysis", response_model=AnalysisRecord)
 async def create_analysis(payload: SaveAnalysisRequest, x_client_id: Optional[str] = Header(default=None)):

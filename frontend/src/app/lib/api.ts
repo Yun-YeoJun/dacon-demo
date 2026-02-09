@@ -27,7 +27,7 @@ export type InboxItem = {
 
 export type InboxResponse = { items: InboxItem[]; nextCursor?: string | null };
 
-export type MessageDetail = { id: string; channel: Channel; senderId: string; content: string; ts: string };
+export type MessageDetail = { id: string; channel: Channel; senderName: string; senderId: string; content: string; ts: string };
 
 export type AnalysisRecord = { analysisId: string; messageId: string; createdAt: string; analysis: AnalyzeResult };
 export type AnalysisListResponse = { items: AnalysisRecord[]; nextCursor?: string | null };

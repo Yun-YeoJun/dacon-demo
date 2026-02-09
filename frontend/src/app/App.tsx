@@ -10,27 +10,32 @@ import { FacebookMessages } from './components/FacebookMessages';
 import { InstagramMessages } from './components/InstagramMessages';
 import { KakaoMessages } from './components/KakaoMessages';
 import { AnalysisHistory } from './components/AnalysisHistory';
-import { analyzeText, getMessage, saveAnalysis } from './lib/api';
+import { analyzeText, getMessage, saveAnalysis, type MessageDetail } from './lib/api';
 import { Search } from './components/Search';
 import { Notification } from './components/Notification';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<
     'home' | 'messages' | 'analysis' | 'safeanalysis' | 'forgery' | 'mypage' |
-    'dmselect' | 'facebook' | 'instagram' | 'search' | 'notification' | 'historydetail'
+    'dmselect' | 'facebook' | 'instagram' | 'kakao' | 'search' | 'notification' | 'historydetail'
   >('home');
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<MessageDetail | null>(null);
   const [analysisPayload, setAnalysisPayload] = useState<any | null>(null);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(3);
 
   
 async function runAnalysisForMessage(messageId: string) {
   setSelectedMessageId(messageId);
+  setSelectedMessage(null);
   setAnalysisPayload(null);
   setAnalysisId(null);
+  setAnalysisLoading(true);
   try {
     const msg = await getMessage(messageId);
+    setSelectedMessage(msg);
     const res = await analyzeText(msg.content);
     setAnalysisPayload(res.result);
     // 저장(사용자 기기별)
@@ -40,9 +45,10 @@ async function runAnalysisForMessage(messageId: string) {
     if (res.result.label === "스미싱") setCurrentPage("analysis");
     else setCurrentPage("safeanalysis");
   } catch (e) {
-    // 실패하면 분석 화면으로 보내고, 내부에서 에러 문구 표시(기존 컴포넌트가 정적이면 콘솔로)
     console.error(e);
     setCurrentPage("analysis");
+  } finally {
+    setAnalysisLoading(false);
   }
 }
 
@@ -58,13 +64,14 @@ return (
         <div className="h-full">
           {currentPage === 'home' && <Home onNavigate={setCurrentPage} />}
           {currentPage === 'messages' && <MessageList onNavigate={setCurrentPage} onAnalyze={runAnalysisForMessage} />}
-          {currentPage === 'analysis' && <AnalysisResult onNavigate={setCurrentPage} analysisPayload={analysisPayload} />}
-          {currentPage === 'safeanalysis' && <SafeAnalysisResult onNavigate={setCurrentPage} analysisPayload={analysisPayload} />}
+          {currentPage === 'analysis' && <AnalysisResult onNavigate={setCurrentPage} analysisPayload={analysisPayload} message={selectedMessage} />}
+          {currentPage === 'safeanalysis' && <SafeAnalysisResult onNavigate={setCurrentPage} analysisPayload={analysisPayload} message={selectedMessage} />}
           {currentPage === 'forgery' && <ForgeryCheck onNavigate={setCurrentPage} />}
           {currentPage === 'mypage' && <MyPage onNavigate={setCurrentPage} />}
           {currentPage === 'dmselect' && <DMSelect onNavigate={setCurrentPage} />}
           {currentPage === 'facebook' && <FacebookMessages onNavigate={setCurrentPage} onAnalyze={runAnalysisForMessage} />}
           {currentPage === 'instagram' && <InstagramMessages onNavigate={setCurrentPage} onAnalyze={runAnalysisForMessage} />}
+          {currentPage === 'kakao' && <KakaoMessages onNavigate={setCurrentPage} onAnalyze={runAnalysisForMessage} />}
           {currentPage === 'search' && <Search onNavigate={setCurrentPage} />}
           {currentPage === 'notification' && <Notification onNavigate={setCurrentPage} unreadCount={unreadNotifications} setUnreadCount={setUnreadNotifications} />}
         </div>
